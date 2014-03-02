@@ -4,32 +4,31 @@
 
 var math = require('../../libs/nerdamer/nerdamer-0.4.4.js').math();
 
-_simplify = function( s1, s2 ) {
+_simplify = function( left, right, op ) {
   var latex = {'\\cdot' : '*'};
 
-  console.log( s1 );
-
   // clean latex
-  for( value in latex ) {
+  /*for( value in latex ) {
     s1 = s1.replace( /value/g , latex[value] );
     s2 = s2.replace( /value/g , latex[value] );
-  }
+  }*/
 
-  var solved = math.addEquation( "(" + s1 + ")" + s2 ).equation;
+  left = math.addEquation( "(" + left + ")" + op ).equation;
+  right = math.addEquation( "(" + right + ")" + op ).equation;
 
-  return solved;
+  return left + "=" + right;
 }
 
 var EquationEditor = React.createClass({
 
   getDefaultProps: function() { return {
     numbers : [1,2,3,4,5,6,7,8,9,0],
-    operators : '+,-,\\cdot,:'.split(','),
+    operators : '+,-,*,/'.split(','),
     variables : 'x,y,z'.split(',')
   } },
 
   getInitialState: function() { return {
-    equations : ['3 \\cdot x-2=x'],
+    equations : ['3 * x-2=x'],
     operations : []
   } },
 
@@ -37,7 +36,14 @@ var EquationEditor = React.createClass({
     var ops = this.state.operations;
     ops.push( operation );
 
-    this.setState( { operations : ops } );
+    var equations = this.state.equations;
+
+    var equation = equations[ equations.length - 1 ].split('=');
+    equation = _simplify( equation[0], equation[1], operation );
+
+    equations.push( equation );
+
+    this.setState( { operations : ops, equations : equations } );
   },
 
   render: function() {
@@ -62,8 +68,6 @@ var EquationEditor = React.createClass({
     MathJax.Hub.Config({
       tex2jax : {inlineMath:[['$','$']] }
     });
-
-    console.log( _simplify("3*x+3", "/3") );
   }
 
 });
@@ -109,7 +113,7 @@ var OperationBoard = React.createClass( {displayName: 'OperationBoard',
 
     return <div>
             <div>{current_operation}</div>
-            <button style={submit} onClick={this._submit}>"Submit"</button>
+            <button style={submit} onClick={this._submit}>Submit</button>
             {operations}
             {numbers}
             {variables}
@@ -134,7 +138,16 @@ var Keypad = React.createClass({displayName: 'Keypad',
   },
 
   render: function() {
-    return <div className='keybad-button' onClick={this.onClick}> {'$' + this.props.value + '$'}</div>
+
+    var style = {
+      width: '25px',
+      height: '25px',
+      border: '2px solid blue',
+      float: 'left',
+      'margin-right': '5px'
+    };
+
+    return <div className='keybad-button' style={style} onClick={this.onClick}> {'$' + this.props.value + '$'}</div>
   }
 });
 
