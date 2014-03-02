@@ -2,7 +2,25 @@
 * @jsx React.DOM
 */
 
-var EquationEditor = React.createClass({displayName: 'EquationEditor',
+var math = require('../../libs/nerdamer/nerdamer-0.4.4.js').math();
+
+_simplify = function( s1, s2 ) {
+  var latex = {'\\cdot' : '*'};
+
+  console.log( s1 );
+
+  // clean latex
+  for( value in latex ) {
+    s1 = s1.replace( /value/g , latex[value] );
+    s2 = s2.replace( /value/g , latex[value] );
+  }
+
+  var solved = math.addEquation( "(" + s1 + ")" + s2 ).equation;
+
+  return solved;
+}
+
+var EquationEditor = React.createClass({
 
   getDefaultProps: function() { return {
     numbers : [1,2,3,4,5,6,7,8,9,0],
@@ -11,8 +29,8 @@ var EquationEditor = React.createClass({displayName: 'EquationEditor',
   } },
 
   getInitialState: function() { return {
-    equations : ['x^2-2=0', 'x^2=2', 'x=\\pm \\sqrt{2}'],
-    operations : ['+2', '\\sqrt{}']
+    equations : ['3 \\cdot x-2=x'],
+    operations : []
   } },
 
   _next: function( operation ) {
@@ -26,15 +44,26 @@ var EquationEditor = React.createClass({displayName: 'EquationEditor',
     var self = this; // do with a bind?
     
     eqs = this.state.equations.map( function(e, i) {
-      return Equation( {key:'equation-step-' + i, equation:e, operation:self.state.operations[i]} );
+      return <Equation key={'equation-step-' + i} equation={e} operation={self.state.operations[i]} />
     } );
 
-    return React.DOM.div(null, eqs, OperationBoard( {numbers:this.props.numbers, operations:this.props.operators, variables:this.props.variables, submit:this._next} ) );
+    return <div>
+              {eqs}
+              <OperationBoard numbers={this.props.numbers} operations={this.props.operators} variables={this.props.variables} submit={this._next} />
+            </div>
   },
 
   componentDidUpdate: function() {
     // re-render math
-    MathJax.Hub.Typeset()
+    MathJax.Hub.Typeset();
+  },
+
+  componentDidMount: function() {
+    MathJax.Hub.Config({
+      tex2jax : {inlineMath:[['$','$']] }
+    });
+
+    console.log( _simplify("3*x+3", "/3") );
   }
 
 });
@@ -78,10 +107,13 @@ var OperationBoard = React.createClass( {displayName: 'OperationBoard',
       submit.display = 'inline';
     }
 
-    return React.DOM.div(null, 
-      React.DOM.div(null, current_operation, React.DOM.button( {style:submit, onClick:this._submit}, "Submit")),
-      operations, numbers, variables
-      )
+    return <div>
+            <div>{current_operation}</div>
+            <button style={submit} onClick={this._submit}>"Submit"</button>
+            {operations}
+            {numbers}
+            {variables}
+          </div>
   },
 
   componentDidMount: function() {
@@ -102,9 +134,8 @@ var Keypad = React.createClass({displayName: 'Keypad',
   },
 
   render: function() {
-    return React.DOM.div( {className:'keybad-button', onClick:this.onClick} , '$' + this.props.value + '$')
+    return <div className='keybad-button' onClick={this.onClick}> {'$' + this.props.value + '$'}</div>
   }
-
 });
 
 var Equation = React.createClass({displayName: 'Equation',
@@ -113,10 +144,9 @@ var Equation = React.createClass({displayName: 'Equation',
 
     var operation = this.props.operation ?  '$' + this.props.operation + '$' : 'Edit this equation';
 
-    return React.DOM.p(null, 
-      React.DOM.span(null, '$' + this.props.equation + '$'), " || ",
-      React.DOM.span(null, operation)
-      );
+    return <p>
+      {'\$' + this.props.equation + '\$'} || {operation}
+      </p>
   }
 
 });

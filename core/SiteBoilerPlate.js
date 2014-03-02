@@ -76,6 +76,7 @@ var SiteBoilerPlate = React.createClass({
             name="viewport"
             content="width=device-width, initial-scale=1.0, user-scalable=no"
           />
+          <script type="text/javascript" src="http://cdn.mathjax.org/mathjax/latest/MathJax.js?config=TeX-AMS-MML_HTMLorMML"></script>
         </ReactStyleHead>
         <body>
           {this.props.children}
